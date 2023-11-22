@@ -33,36 +33,43 @@ export interface Spectrum {
 export async function fetchSpectrumFromSource(
   usi: string,
   source: SpectrumSource
-): Promise<Result<Spectrum, Error>> {
+): Promise<Result<Spectrum[], Error>> {
   const params = new URLSearchParams({ usi, resultType: 'full' });
   const url = `${source}?${params.toString()}`;
-  const response = await fetch(url);
+
+  let response: Response;
+
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    return Err(new Error(`Failed to fetch spectrum from \`${url}\`: ${error}`));
+  }
 
   if (!response.ok) {
     return Err(
       new Error(
-        `Failed to fetch spectrum from ${url}: ${response.status} ${response.statusText}`
+        `Failed to fetch spectrum from \`${url}\`: ${response.status} ${response.statusText}`
       )
     );
   }
 
-  let spectrum: Spectrum;
+  let spectra: Spectrum[];
 
   try {
-    spectrum = await response.json();
+    spectra = await response.json();
   } catch (error) {
     return Err(
-      new Error(`Failed to parse spectrum json from ${url}: ${error}`)
+      new Error(`Failed to parse spectrum json from \`${url}\`: ${error}`)
     );
   }
 
-  return Ok(spectrum);
+  return Ok(spectra);
 }
 
 export async function fetchSpectrum(
   usi: string,
   priority: SpectrumSourcePriority = DEFAULT_SPECTRUM_SOURCE_PRIORITY
-): Promise<Result<Spectrum, Error[]>> {
+): Promise<Result<Spectrum[], Error[]>> {
   const spectraResults = await Promise.all(
     priority.map(source => fetchSpectrumFromSource(usi, source))
   );
