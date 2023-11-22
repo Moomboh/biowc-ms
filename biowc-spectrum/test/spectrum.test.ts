@@ -20,9 +20,8 @@ function validateSpectrum(spectraResult: Result<Spectrum[], Error | Error[]>) {
     expect(spectrum.intensities).to.be.an('array');
   }
 }
-
+// eslint-disable-next-line func-names -- mocha needs to use this
 describe('fetchSpectrumFromSource', function () {
-  // eslint-disable-line func-names -- mocha needs to use this
   this.timeout(10000);
 
   it('should fetch a spectrum from ProteomeCentral', async () => {
@@ -90,8 +89,8 @@ describe('fetchSpectrumFromSource', function () {
   });
 });
 
+// eslint-disable-next-line func-names -- mocha needs to use this
 describe('fetchSpectrum', function () {
-  // eslint-disable-line func-names -- mocha needs to use this
   this.timeout(10000);
 
   it('should fetch a spectrum', async () => {
