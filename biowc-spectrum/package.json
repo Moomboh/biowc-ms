@@ -28,6 +28,8 @@
     "ts-results": "^3.3.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
     "@custom-elements-manifest/analyzer": "^0.4.17",
     "@open-wc/eslint-config": "^9.2.2",
     "@open-wc/testing": "^3.2.2",
@@ -76,7 +78,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint --edit ${1}"
     }
   },
   "lint-staged": {
