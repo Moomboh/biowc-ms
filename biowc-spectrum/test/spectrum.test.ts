@@ -8,7 +8,7 @@ import {
   Spectrum,
 } from '../src/spectrum.js';
 
-function validateSpectrum(spectraResult: Result<Spectrum[], Error | Error[]>) {
+function validateSpectra(spectraResult: Result<Spectrum[], Error | Error[]>) {
   if (spectraResult.err) {
     console.error(spectraResult.val);
   }
@@ -31,7 +31,7 @@ describe('fetchSpectrumFromSource', function () {
       usi,
       SpectrumSource.ProteomeCentral
     );
-    validateSpectrum(spectrumResult);
+    validateSpectra(spectrumResult);
   });
 
   it('should fetch a spectrum from PRIDE', async () => {
@@ -41,7 +41,7 @@ describe('fetchSpectrumFromSource', function () {
       usi,
       SpectrumSource.PRIDE
     );
-    validateSpectrum(spectrumResult);
+    validateSpectra(spectrumResult);
   });
 
   it('should fetch a spectrum from PeptideAtlas', async () => {
@@ -51,7 +51,7 @@ describe('fetchSpectrumFromSource', function () {
       usi,
       SpectrumSource.PeptideAtlas
     );
-    validateSpectrum(spectrumResult);
+    validateSpectra(spectrumResult);
   });
 
   // TODO: MassiVE is setting the Access-Control-Allow-Origin header to
@@ -64,7 +64,7 @@ describe('fetchSpectrumFromSource', function () {
       usi,
       SpectrumSource.MassIVE
     );
-    validateSpectrum(spectrumResult);
+    validateSpectra(spectrumResult);
   });
 
   // TODO: jPOST is returning 404 on the USI endpoint even though the spectrum is
@@ -76,7 +76,7 @@ describe('fetchSpectrumFromSource', function () {
       usi,
       SpectrumSource.jPOST
     );
-    validateSpectrum(spectrumResult);
+    validateSpectra(spectrumResult);
   });
 
   it('should return an error if the spectrum is not found', async () => {
@@ -91,13 +91,13 @@ describe('fetchSpectrumFromSource', function () {
 
 // eslint-disable-next-line func-names -- mocha needs to use this
 describe('fetchSpectrum', function () {
-  this.timeout(10000);
+  this.timeout(20000);
 
   it('should fetch a spectrum', async () => {
     const usi =
       'mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555:VLHPLEGAVVIIFK/2';
     const spectrumResult = await fetchSpectrum(usi);
-    validateSpectrum(spectrumResult);
+    validateSpectra(spectrumResult);
   });
 
   it('should return an error if the spectrum is not found', async () => {

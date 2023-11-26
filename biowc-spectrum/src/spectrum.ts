@@ -14,8 +14,9 @@ const DEFAULT_SPECTRUM_SOURCE_PRIORITY: SpectrumSourcePriority = [
   SpectrumSource.ProteomeCentral,
   SpectrumSource.PRIDE,
   SpectrumSource.PeptideAtlas,
-  SpectrumSource.MassIVE,
-  SpectrumSource.jPOST,
+  // TODO: check if MassIVE and jPOST are working and can be re-enabled
+  // SpectrumSource.MassIVE,
+  // SpectrumSource.jPOST,
 ];
 
 export interface SpectrumAttributes {
