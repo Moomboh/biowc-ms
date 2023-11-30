@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en-GB">
+
 <head>
   <meta charset="utf-8">
   <style>
@@ -8,22 +9,45 @@
     }
   </style>
 </head>
+
 <body>
   <div id="demo"></div>
 
   <script type="module">
+    // TODO: move this to a .ts file
+    //       currently the build fails if we do that
     import { html, render } from 'lit';
+    import { fetchSpectrumFromSource } from '../dist/src/spectrum.js'
     import '../dist/src/BiowcSpectrum.js';
 
-    const header = 'Hello owc World!';
-    render(
-      html`
-        <biowc-spectrum .header=${header}>
-          some light-dom
-        </biowc-spectrum>
-      `,
-      document.querySelector('#demo')
-    );
+    export async function mount(el) {
+      const spectrum = await fetchSpectrumFromSource(
+        'mzspec:PXD000561:Adult_Frontalcortex_bRP_Elite_85_f09:scan:17555:VLHPLEGAVVIIFK/2',
+        'https://proteomecentral.proteomexchange.org/api/proxi/v0.1/spectra'
+      );
+
+      if (spectrum.err) {
+        render(
+          html`
+            <h3>Error fetching spectrum:</h3>
+            <div>${spectrum.val}</div>
+          `,
+          el
+        );
+      } else {
+        render(
+          html`
+            <biowc-spectrum
+              .spectrum=${spectrum.val[0]}
+            ></biowc-spectrum>
+          `,
+          el
+        );
+      }
+    }
+
+    await mount(document.getElementById('demo'));
   </script>
 </body>
+
 </html>
