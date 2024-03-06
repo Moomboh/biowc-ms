@@ -2,10 +2,14 @@ import { LitElement, svg } from 'lit';
 import { customElement, property, query, queryAll } from 'lit/decorators.js';
 import styles from './styles/biowc-spectrum-peaks.css.js';
 import range from './utils/range.js';
+import { IndexedMatchedPeaks, PEAK_COLOR_MAP } from './peaks.js';
 
 @customElement('biowc-spectrum-peaks')
 export class BiowcSpectrumPeaks extends LitElement {
   static styles = styles;
+
+  @property({ type: Boolean, attribute: 'mirror' })
+  mirror = false;
 
   @property({ type: Array, attribute: 'mzs' })
   mzs: number[] = [];
@@ -13,8 +17,20 @@ export class BiowcSpectrumPeaks extends LitElement {
   @property({ type: Array, attribute: 'intensities' })
   intensities: number[] = [];
 
+  @property({ type: Object, attribute: 'matched-peaks' })
+  indexedMatchedPeaks: IndexedMatchedPeaks = {};
+
+  @property({ type: Number, attribute: 'min-mz' })
+  minMz: number | null = null;
+
+  @property({ type: Number, attribute: 'max-mz' })
+  maxMz: number | null = null;
+
   @property({ type: String, attribute: 'mz-label' })
   mzLabel = 'm/z';
+
+  @property({ type: Boolean, attribute: 'hide-mz-axis-label' })
+  hideMzAxisLabel = false;
 
   @property({ type: String, attribute: 'intensity-label' })
   intensityLabel = 'Intensity';
@@ -38,7 +54,7 @@ export class BiowcSpectrumPeaks extends LitElement {
   xTicksPrecision = 5;
 
   @property({ type: Number, attribute: 'y-ticks-precision' })
-  yTicksPrecision = 5;
+  yTicksPrecision = 2;
 
   @property({ type: Number, attribute: 'tick-font-size' })
   tickFontSize = 16;
@@ -55,8 +71,17 @@ export class BiowcSpectrumPeaks extends LitElement {
   @property({ type: Number, attribute: 'tick-length' })
   tickLength = 8;
 
-  @property({ type: Number, attribute: 'x-axis-padding-frac' })
+  @property({ type: Number, attribute: 'annotation-font-size' })
+  annotationFontSize = 12;
+
+  @property({ type: String, attribute: 'annotation-font-family' })
+  annotationFontFamily = 'monospace';
+
+  @property({ type: Number, attribute: 'x-axis-padding' })
   xAxisPadding = 12;
+
+  @property({ type: Number, attribute: 'y-axis-padding-frac' })
+  yAxisPaddingFrac = 0.1;
 
   @property({ type: Number, attribute: 'zoom-sensitivity' })
   zoomSensitivity = 0.001;
@@ -73,8 +98,38 @@ export class BiowcSpectrumPeaks extends LitElement {
     this._updateZoomAndScroll();
   }
 
+  get xScroll() {
+    return this._xScroll;
+  }
+
+  set xScroll(xScroll: number) {
+    this._xScroll = xScroll;
+    this._updateZoomAndScroll();
+  }
+
+  get yZoom() {
+    return this._yZoom;
+  }
+
+  set yZoom(yZoom: number) {
+    this._yZoom = yZoom;
+    this._updateZoomAndScroll();
+  }
+
+  get yScroll() {
+    return this._yScroll;
+  }
+
+  set yScroll(yScroll: number) {
+    this._yScroll = yScroll;
+    this._updateZoomAndScroll();
+  }
+
   @query('#peaks')
   private _peaksGroup: SVGGElement | undefined;
+
+  @queryAll('.annotation')
+  private _annotations: SVGTextElement[] | undefined;
 
   @queryAll('.x-tick-label')
   private _xTickLabels: SVGTextElement[] | undefined;
@@ -91,10 +146,18 @@ export class BiowcSpectrumPeaks extends LitElement {
   private _yScroll = 0;
 
   private get _minMz() {
+    if (this.minMz !== null) {
+      return this.minMz;
+    }
+
     return Math.min(...this.mzs);
   }
 
   private get _maxMz() {
+    if (this.maxMz !== null) {
+      return this.maxMz;
+    }
+
     return Math.max(...this.mzs);
   }
 
@@ -103,7 +166,7 @@ export class BiowcSpectrumPeaks extends LitElement {
   }
 
   private get _maxIntensity() {
-    return Math.max(...this.intensities);
+    return Math.max(...this.intensities) * (1 + this.yAxisPaddingFrac);
   }
 
   private get _intensityRange() {
@@ -143,20 +206,28 @@ export class BiowcSpectrumPeaks extends LitElement {
   }
 
   private get _axesYStart() {
-    return this.tickFontSize / 2;
+    return this.mirror
+      ? 2 * this.tickLength +
+          this.tickFontSize +
+          3 + // TODO: check why SVG-Text elements are 3px larger than their font-size
+          (this.hideMzAxisLabel
+            ? 0
+            : this.axesLabelMargin + this.axesLabelFontSize + 3) + // TODO: check why SVG-Text elements are 3px larger than their font-size
+          this.tickMargin
+      : this.offsetHeight -
+          2 * this.tickLength -
+          this.tickFontSize -
+          3 - // TODO: check why SVG-Text elements are 3px larger than their font-size
+          this.axesLabelMargin -
+          this.axesLabelFontSize -
+          3 - // TODO: check why SVG-Text elements are 3px larger than their font-size
+          this.tickMargin;
   }
 
   private get _axesYEnd() {
-    return (
-      this.offsetHeight -
-      2 * this.tickLength -
-      this.tickFontSize -
-      3 - // TODO: check why SVG-Text elements are 3px larger than their font-size
-      this.axesLabelMargin -
-      this.axesLabelFontSize -
-      3 - // TODO: check why SVG-Text elements are 3px larger than their font-size
-      this.tickMargin
-    );
+    return this.mirror
+      ? this.offsetHeight - this.tickFontSize / 2
+      : this.tickFontSize / 2;
   }
 
   private get _axesXCenter() {
@@ -164,7 +235,7 @@ export class BiowcSpectrumPeaks extends LitElement {
   }
 
   private get _axesYCenter() {
-    return this._axesYStart + (this._axesYEnd - this._axesYStart) / 2;
+    return this._axesYEnd + (this._axesYStart - this._axesYEnd) / 2;
   }
 
   private get _axesXWidth() {
@@ -176,7 +247,9 @@ export class BiowcSpectrumPeaks extends LitElement {
   }
 
   private get _axesYHeight() {
-    return this._axesYEnd - this._axesYStart;
+    return this.mirror
+      ? this._axesYEnd - this._axesYStart
+      : this._axesYStart - this._axesYEnd;
   }
 
   constructor() {
@@ -216,34 +289,56 @@ export class BiowcSpectrumPeaks extends LitElement {
     `;
   }
 
+  updateZoomScroll(
+    xZoom: number,
+    xScroll: number,
+    yZoom: number,
+    yScroll: number,
+  ) {
+    this._xZoom = xZoom;
+    this._xScroll = xScroll;
+    this._yZoom = yZoom;
+    this._yScroll = yScroll;
+
+    this._updateZoomAndScroll(true);
+  }
+
   private _renderAxes() {
     const xAxesLabelX = this._axesXCenter;
-    const xAxesLabelY = this.offsetHeight - this.axesLabelMargin;
+    const xAxesLabelY = this.mirror
+      ? this.axesLabelFontSize + 3 // TODO: check why svg text elements are 3px larger than font-size
+      : this.offsetHeight - this.axesLabelMargin;
     const yAxesLabelX = this.axesLabelMargin + 3; // TODO: check why svg text elements are 3px larger than font-size
     const yAxesLabelY = this._axesYCenter;
 
     return svg`
       <g>
         <!-- Intensity/y-axis -->
-        <text
-          x="${xAxesLabelX}"
-          y="${xAxesLabelY}"
-          font-size="${this.axesLabelFontSize}"
-          font-family="${this.axesLabelFontFamily}"
-          text-anchor="middle"
-        >
-          ${this.mzLabel}
-        </text>
+        ${
+          this.hideMzAxisLabel
+            ? svg``
+            : svg`
+          <text
+            x="${xAxesLabelX}"
+            y="${xAxesLabelY}"
+            font-size="${this.axesLabelFontSize}"
+            font-family="${this.axesLabelFontFamily}"
+            text-anchor="middle"
+          >
+            ${this.mzLabel}
+          </text>
+        `
+        }
 
         ${range(0, this.nXTicks - 1).map((i: number) =>
-          this._renderXtick(i / (this.nXTicks - 1))
+          this._renderXtick(i / (this.nXTicks - 1)),
         )}
 
         <line
           x1="${this._axesXStart}"
-          y1="${this._axesYEnd}"
+          y1="${this._axesYStart}"
           x2="${this._axesXEnd}"
-          y2="${this._axesYEnd}"
+          y2="${this._axesYStart}"
           stroke="black"
         />
 
@@ -260,14 +355,14 @@ export class BiowcSpectrumPeaks extends LitElement {
         </text>
 
         ${range(0, this.nYTicks - 1).map((i: number) =>
-          this._renderYtick(i / (this.nYTicks - 1))
+          this._renderYtick(i / (this.nYTicks - 1)),
         )}
 
         <line
           x1="${this._axesXStart}"
-          y1="${this._axesYStart}"
+          y1="${this._axesYEnd}"
           x2="${this._axesXStart}"
-          y2="${this._axesYEnd}"
+          y2="${this._axesYStart}"
           stroke="black"
         />
       </g>
@@ -278,19 +373,25 @@ export class BiowcSpectrumPeaks extends LitElement {
     const x = this._mzToX(this._minMz + axesFrac * this._mzRange);
     const label = this._xTickFractionToMzLabel(axesFrac);
 
+    const lineY1 = this._axesYStart;
+    const lineY2 = this.mirror
+      ? lineY1 - this.tickLength
+      : lineY1 + this.tickLength;
+    const textY = this.mirror
+      ? lineY2 - this.tickMargin
+      : lineY2 + this.tickFontSize + this.tickMargin;
+
     return svg`
       <line
         x1="${x}"
-        y1="${this._axesYEnd}"
+        y1="${lineY1}"
         x2="${x}"
-        y2="${this._axesYEnd + this.tickLength}"
+        y2="${lineY2}"
         stroke="black"
       />
       <text
         x="${x}"
-        y="${
-          this._axesYEnd + this.tickLength + this.tickFontSize + this.tickMargin
-        }"
+        y="${textY}"
         font-size="${this.tickFontSize}"
         font-family="${this.tickFontFamily}"
         text-anchor="middle"
@@ -304,7 +405,7 @@ export class BiowcSpectrumPeaks extends LitElement {
 
   private _renderYtick(axesFrac: number) {
     const y = this._intensityToY(
-      this._intensityRange - axesFrac * this._intensityRange
+      this._intensityRange - axesFrac * this._intensityRange,
     );
     const label = this._yTickFractionToIntensityLabel(axesFrac);
 
@@ -331,16 +432,19 @@ export class BiowcSpectrumPeaks extends LitElement {
   }
 
   private _renderPeaks() {
-    const transformOrigin = `${this._axesXStartPadded} ${this._axesYEnd}`;
+    const transformOrigin = `${this._axesXStartPadded} ${this._axesYStart}`;
     const transform = `translate(${this._xScroll}, ${-this._yScroll}) scale(${
       this._xZoom
     }, ${this._yZoom})`;
 
+    const clipX = this._axesXStart;
+    const clipY = this.mirror ? this._axesYStart : this._axesYEnd;
+
     return svg`
       <clipPath id="peaks-clip">
         <rect
-          x="${this._axesXStart}"
-          y="${this._axesYStart}"
+          x="${clipX}"
+          y="${clipY}"
           width="${this._axesXWidth}"
           height="${this._axesYHeight}"
         />
@@ -353,33 +457,81 @@ export class BiowcSpectrumPeaks extends LitElement {
           transform="${transform}"
         >
           ${this.mzs.map((mz: number, i: number) =>
-            this._renderPeak(mz, this.intensities[i])
+            this._renderPeak(mz, this.intensities[i], i),
           )}
         </g>
       </g>
     `;
   }
 
-  private _renderPeak(mz: number, intensity: number) {
-    return svg`
+  private _renderPeak(mz: number, intensity: number, i: number) {
+    let stroke = 'grey';
+    let annotationSvg = svg``;
+
+    if (this.indexedMatchedPeaks[i]) {
+      const matchedPeak = this.indexedMatchedPeaks[i];
+      const ionType = matchedPeak.ion_type;
+      const aaPosition = matchedPeak.aa_position;
+      const { charge } = matchedPeak;
+
+      stroke = PEAK_COLOR_MAP.get(ionType) || 'grey';
+
+      const annotationX = this._mzToX(mz);
+      const annotationY = this._intensityToY(intensity);
+      const text = `${ionType}${aaPosition}${'+'.repeat(charge)}`;
+
+      annotationSvg = svg`
+        <text
+          x="${annotationX}"
+          y="${annotationY}"
+          font-size="${this.annotationFontSize}"
+          font-family="${this.annotationFontFamily}"
+          text-anchor="left"
+          alignment-baseline="middle"
+          fill="${stroke}"
+          transform="${this.mirror ? 'rotate(90)' : 'rotate(-90)'} scale(${1 / this._xZoom}, ${1 / this._yZoom})"
+          transform-origin="${annotationX} ${annotationY}"
+          class="annotation"
+          vector-effect="non-scaling-stroke"
+        >
+          ${text}
+        </text>
+      `;
+    }
+
+    const x = this._mzToX(mz);
+
+    const lineSvg = svg`
       <line
-        x1="${this._mzToX(mz)}"
-        y1="${this._axesYEnd}"
-        x2="${this._mzToX(mz)}"
+        x1="${x}"
+        y1="${this._axesYStart}"
+        x2="${x}"
         y2="${this._intensityToY(intensity)}"
-        stroke="grey"
+        stroke="${stroke}"
         vector-effect="non-scaling-stroke"
       />
     `;
+
+    return svg`
+      ${lineSvg}
+      ${annotationSvg}
+    `;
   }
 
-  private _updateZoomAndScroll() {
+  private _updateZoomAndScroll(suppressEvent = false) {
     this._peaksGroup?.setAttribute(
       'transform',
       `translate(${this._xScroll}, ${-this._yScroll}) scale(${this._xZoom}, ${
         this._yZoom
-      })`
+      })`,
     );
+
+    this._annotations?.forEach(annotation => {
+      annotation.setAttribute(
+        'transform',
+        `${this.mirror ? 'rotate(90)' : 'rotate(-90)'} scale(${1 / this._yZoom}, ${1 / this._xZoom})`,
+      );
+    });
 
     this._xTickLabels?.forEach(tickLabel => {
       const fraction = parseFloat(tickLabel.dataset.fraction || '0');
@@ -392,6 +544,19 @@ export class BiowcSpectrumPeaks extends LitElement {
       // eslint-disable-next-line no-param-reassign
       tickLabel.textContent = this._yTickFractionToIntensityLabel(fraction);
     });
+
+    if (!suppressEvent) {
+      const event = new CustomEvent('zoom-scroll', {
+        detail: {
+          xZoom: this._xZoom,
+          xScroll: this._xScroll,
+          yZoom: this._yZoom,
+          yScroll: this._yScroll,
+        },
+      });
+
+      this.dispatchEvent(event);
+    }
   }
 
   private _handleResize() {
@@ -403,7 +568,7 @@ export class BiowcSpectrumPeaks extends LitElement {
 
     if (e.ctrlKey) {
       this._handleXZoom(e.deltaX, e.offsetX - this._axesXStartPadded);
-      this._handleYZoom(e.deltaY, e.offsetY - this._axesYStart);
+      this._handleYZoom(e.deltaY, e.offsetY - this._axesYEnd);
     } else {
       if (this._xZoom > 1) {
         this._handleXScroll(e.deltaX);
@@ -422,7 +587,7 @@ export class BiowcSpectrumPeaks extends LitElement {
 
     this._xZoom = Math.max(1, xZoom);
     this._xScroll = this._clipXOffset(
-      zoomChange * (this._xScroll - xCenter) + xCenter
+      zoomChange * (this._xScroll - xCenter) + xCenter,
     );
 
     this._updateZoomAndScroll();
@@ -442,7 +607,7 @@ export class BiowcSpectrumPeaks extends LitElement {
 
     this._yZoom = Math.max(1, yZoom);
     this._yScroll = this._clipYOffset(
-      zoomChange * (this._yScroll - yCenter) + yCenter
+      zoomChange * (this._yScroll - yCenter) + yCenter,
     );
 
     this._updateZoomAndScroll();
@@ -462,7 +627,10 @@ export class BiowcSpectrumPeaks extends LitElement {
 
   private _clipYOffset(yOffset: number): number {
     const maxOffset = (this._yZoom - 1) * this._axesYHeight;
-    return Math.min(Math.max(yOffset, -maxOffset), 0);
+    const clippedOffset = this.mirror
+      ? Math.max(Math.min(yOffset, maxOffset), 0)
+      : Math.min(Math.max(yOffset, -maxOffset), 0);
+    return clippedOffset;
   }
 
   private _mzToX(mz: number) {
@@ -473,10 +641,11 @@ export class BiowcSpectrumPeaks extends LitElement {
   }
 
   private _intensityToY(intensity: number) {
-    return (
-      this._axesYStart +
-      (1 - intensity / this._intensityRange) * this._axesYHeight
-    );
+    return this.mirror
+      ? this._axesYEnd -
+          (1 - intensity / this._intensityRange) * this._axesYHeight
+      : this._axesYEnd +
+          (1 - intensity / this._intensityRange) * this._axesYHeight;
   }
 
   private _xTickFractionToMzLabel(fraction: number): string {
@@ -487,21 +656,24 @@ export class BiowcSpectrumPeaks extends LitElement {
     const scaledMzRange = scaledMaxMz - scaledMinMz;
 
     return (scaledMinMz + fraction * scaledMzRange).toPrecision(
-      this.xTicksPrecision
+      this.xTicksPrecision,
     );
   }
 
   private _yTickFractionToIntensityLabel(fraction: number): string {
-    const scaledMinIntensity =
-      this._intensityRange -
-      (this._yScroll / (this._axesYHeight * this._yZoom)) *
+    const scaledMinIntensity = this.mirror
+      ? (this._yScroll / (this._axesYHeight * this._yZoom)) *
+        this._intensityRange
+      : (-this._yScroll / (this._axesYHeight * this._yZoom)) *
         this._intensityRange;
+
     const scaledMaxIntensity =
       scaledMinIntensity + this._intensityRange / this._yZoom;
+
     const scaledIntensityRange = scaledMaxIntensity - scaledMinIntensity;
 
-    return (scaledMinIntensity - fraction * scaledIntensityRange).toPrecision(
-      this.yTicksPrecision
+    return (scaledMaxIntensity - fraction * scaledIntensityRange).toPrecision(
+      this.yTicksPrecision,
     );
   }
 }

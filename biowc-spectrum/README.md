@@ -18,6 +18,17 @@ npm i biowc-spectrum
 <biowc-spectrum></biowc-spectrum>
 ```
 
-## TODO
 
+## Backlog 
+
+### Features
+- [ ] Implement mirror peak matching
+- [ ] Match mirror peaks and highlight them on hover
+- [ ] Add option to hide unmatched peaks
+- [ ] Add spectral angle/pearson correlation/dot product score
+- [ ] Add ion indicators on peptide sequence
 - [ ] Make touch friendly (zooming, scrolling)
+- [ ] Add options for all ion types
+- [ ] Add tooltip for peak details
+- [ ] Highlight corresponding peptide fragments/peaks on hover
+- [ ] Allow mz tol in ppm

@@ -13,7 +13,7 @@
   },
   "scripts": {
     "analyze": "cem analyze --litelement",
-    "start": "tsc && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"wds\"",
+    "start": "tsc && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"wds --hmr\"",
     "build": "tsc && npm run analyze -- --exclude dist",
     "prepublish": "tsc && npm run analyze -- --exclude dist",
     "lint": "eslint --ext .ts,.html . --ignore-path .gitignore && prettier \"**/*.ts\" --check --ignore-path .gitignore",
@@ -21,34 +21,38 @@
     "test": "tsc && wtr --coverage",
     "test:watch": "tsc && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"wtr --watch\"",
     "storybook": "tsc && npm run analyze -- --exclude dist && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"wds -c .storybook/server.mjs\"",
-    "storybook:build": "tsc && npm run analyze -- --exclude dist && build-storybook"
+    "storybook:build": "tsc && npm run analyze -- --exclude dist && build-storybook",
+    "pre-commit": "lint-staged",
+    "commit-msg": "commitlint --edit ${1}"
   },
   "dependencies": {
-    "@open-wc/scoped-elements": "^3.0.3",
+    "@open-wc/scoped-elements": "^3.0.5",
     "@webcomponents/scoped-custom-element-registry": "^0.0.9",
     "biowc-ms-lib": "file:../biowc-ms-lib/pkg",
-    "lit": "^3.1.0",
+    "lit": "^3.1.2",
     "ts-results": "^3.3.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^18.4.3",
-    "@commitlint/config-conventional": "^18.4.3",
-    "@custom-elements-manifest/analyzer": "^0.4.17",
-    "@open-wc/eslint-config": "^9.2.2",
-    "@open-wc/testing": "^3.2.2",
-    "@typescript-eslint/eslint-plugin": "^6.12.0",
-    "@typescript-eslint/parser": "^6.12.0",
-    "@web/dev-server": "^0.1.38",
-    "@web/dev-server-storybook": "^0.5.4",
-    "@web/test-runner": "^0.14.1",
-    "concurrently": "^5.3.0",
-    "eslint": "^8.54.0",
-    "eslint-config-prettier": "^8.10.0",
-    "husky": "^4.3.8",
-    "lint-staged": "^10.5.4",
-    "prettier": "^2.8.8",
+    "@commitlint/cli": "^19.0.3",
+    "@commitlint/config-conventional": "^19.0.3",
+    "@custom-elements-manifest/analyzer": "^0.9.3",
+    "@open-wc/dev-server-hmr": "^0.2.0",
+    "@open-wc/eslint-config": "^12.0.3",
+    "@open-wc/testing": "^4.0.0",
+    "@types/mocha": "^10.0.6",
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
+    "@web/dev-server": "^0.4.3",
+    "@web/dev-server-storybook": "^2.0.1",
+    "@web/test-runner": "^0.18.1",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "koa-proxies": "^0.12.4",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
     "tslib": "^2.6.2",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.3"
   },
   "customElements": "custom-elements.json",
   "eslintConfig": {
@@ -72,18 +76,13 @@
         {
           "ignorePackages": true
         }
-      ]
+      ],
+      "lit/no-classfield-shadowing": "off"
     }
   },
   "prettier": {
     "singleQuote": true,
     "arrowParens": "avoid"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint --edit ${1}"
-    }
   },
   "lint-staged": {
     "*.ts": [
