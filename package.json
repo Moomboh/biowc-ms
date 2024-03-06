@@ -1,0 +1,14 @@
+{
+  "name": "biowc-spectrum-workspace",
+  "devDependencies": {
+    "husky": "^9.0.11"
+  },
+  "scripts": {
+    "prepare": "husky && cd biowc-ms-lib && wasm-pack build --target web && cd ../biowc-spectrum && npm i -S ../biowc-ms-lib/pkg --force",
+    "pre-commit": "cd biowc-spectrum && npm run pre-commit",
+    "commit-msg": "cd biowc-spectrum && npm run commit-msg"
+  },
+  "subPackages": [
+    "biowc-spectrum"
+  ]
+}
