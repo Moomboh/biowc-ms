@@ -26,6 +26,7 @@
   "dependencies": {
     "@open-wc/scoped-elements": "^3.0.3",
     "@webcomponents/scoped-custom-element-registry": "^0.0.9",
+    "biowc-ms-lib": "file:../biowc-ms-lib/pkg",
     "lit": "^3.1.0",
     "ts-results": "^3.3.0"
   },
