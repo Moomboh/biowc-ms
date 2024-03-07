@@ -1,13 +1,13 @@
-import { MatchedPeak } from 'biowc-ms-lib';
+import { MatchedFragmentPeak } from 'biowc-ms-lib';
 
-export interface IndexedMatchedPeaks {
-  [index: number]: MatchedPeak;
+export interface IndexedMatchedIons {
+  [index: number]: MatchedFragmentPeak;
 }
 
-export function indexMatchedPeaks(
-  matchedPeaks: MatchedPeak[],
-): IndexedMatchedPeaks {
-  return matchedPeaks.reduce((acc: IndexedMatchedPeaks, peak) => {
+export function indexMatchedIons(
+  matchedIons: MatchedFragmentPeak[],
+): IndexedMatchedIons {
+  return matchedIons.reduce((acc: IndexedMatchedIons, peak) => {
     acc[peak.peak_index] = peak;
     return acc;
   }, {});

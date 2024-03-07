@@ -1,4 +1,4 @@
-import { MatchedPeak } from 'biowc-ms-lib';
+import { MatchedFragmentPeak } from 'biowc-ms-lib';
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import styles from './styles/biowc-pep-seq.css.js';
@@ -11,7 +11,7 @@ export class BiowcPepSeq extends LitElement {
   pepSeq: string = '';
 
   @property({ type: Object })
-  matchedPeaks: MatchedPeak[] = [];
+  matchedIons: MatchedFragmentPeak[] = [];
 
   render() {
     return html` <div>${this.pepSeq}</div> `;

@@ -1,13 +1,16 @@
 mod utils;
 
+use std::collections::HashSet;
+use std::vec;
+
 use wasm_bindgen::prelude::*;
 use mzcore::msms::annotator;
 use mzcore::msms::fragmentation;
 use mzcore::msms::model::FragmentIonSeries;
 use mzcore::chemistry::table::STANDARD_AMINO_ACID_TABLE;
 
-impl Into<MatchedPeak> for annotator::MatchedPeak {
-    fn into(self) -> MatchedPeak {
+impl Into<MatchedFragmentPeak> for annotator::MatchedPeak {
+    fn into(self) -> MatchedFragmentPeak {
         let ion_type = match self.ion_type {
             FragmentIonSeries::a => "a",
             FragmentIonSeries::a_H2O => "a-H2O",
@@ -43,7 +46,7 @@ impl Into<MatchedPeak> for annotator::MatchedPeak {
             FragmentIonSeries::immonium => "immonium",
         };
 
-        MatchedPeak {
+        MatchedFragmentPeak {
             peak_index: self.peak_index,
             peak_mz: self.peak_mz,
             peak_intensity: self.peak_intensity,
@@ -57,10 +60,14 @@ impl Into<MatchedPeak> for annotator::MatchedPeak {
     }
 }
 
+#[wasm_bindgen]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub struct MatchedPeakIndex(pub usize, pub usize);
+
 
 #[wasm_bindgen(getter_with_clone)]
 #[derive(Clone, PartialEq, Debug)]
-pub struct MatchedPeak {
+pub struct MatchedFragmentPeak {
     pub peak_index: usize,
     pub peak_mz: f64,
     pub peak_intensity: f64,
@@ -74,7 +81,7 @@ pub struct MatchedPeak {
 
 // TODO: allow ppm mz_error_tol. Probably needs extension of mzcore-rs
 #[wasm_bindgen(js_name = annotateSpectrum)]
-pub fn annotate_spectrum(pep_seq: String, mzs: &[f64], intensities: &[f64], mz_error_tol: f64) -> Result<Vec<MatchedPeak>, JsValue> {
+pub fn annotate_spectrum(pep_seq: String, mzs: &[f64], intensities: &[f64], mz_error_tol: f64) -> Result<Vec<MatchedFragmentPeak>, JsValue> {
     let frag_table = fragmentation::compute_frag_table_without_mods(
         &pep_seq,
         &[FragmentIonSeries::b, FragmentIonSeries::y],
@@ -91,9 +98,91 @@ pub fn annotate_spectrum(pep_seq: String, mzs: &[f64], intensities: &[f64], mz_e
     )
     .into_iter()
     .map(|x| x.into())
-    .collect::<Vec<MatchedPeak>>();
+    .collect::<Vec<MatchedFragmentPeak>>();
 
     Ok(matched_peaks)
+}
+
+#[wasm_bindgen(js_name = matchPeaks)]
+pub fn match_peaks(
+    query_mzs: &[f64],
+    query_intensities: &[f64],
+    reference_mzs: &[f64],
+    reference_intensities: &[f64],
+    mz_error_tol: f64
+) -> Vec<MatchedPeakIndex> {
+    // TODO: deduplicate this code and make it more efficient, elegant and readable
+
+    let query_matches: HashSet<MatchedPeakIndex> = query_mzs.iter().enumerate().map(|(i, q)| {
+        let mut matched = vec![];
+
+        for (j, r) in reference_mzs.iter().enumerate() {
+            if (q - r).abs() <= mz_error_tol {
+                matched.push(j);
+            }
+        }
+
+        let max_intensity: Option<(usize, f64)> = matched.iter()
+            .map(|&j| (j, reference_intensities[j]))
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Failed to compare intensity values"));
+    
+        if let Some((j, _)) = max_intensity {
+            (i, Some(j))
+        } else {
+            (i, None)
+        }
+    })
+    .filter(|x| x.1.is_some())
+    .map(|x| MatchedPeakIndex(x.0, x.1.unwrap()))
+    .collect();
+
+
+    let reference_matches: HashSet<MatchedPeakIndex> = reference_mzs.iter().enumerate().map(|(i, r)| {
+        let mut matched = vec![];
+
+        for (j, q) in query_mzs.iter().enumerate() {
+            if (q - r).abs() <= mz_error_tol {
+                matched.push(j);
+            }
+        }
+
+        let max_intensity: Option<(usize, f64)> = matched.iter()
+            .map(|&j| (j, query_mzs[j]))
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("Failed to compare intensity values"));
+    
+        if let Some((j, _)) = max_intensity {
+            (i, Some(j))
+        } else {
+            (i, None)
+        }
+    })
+    .filter(|x| x.1.is_some())
+    .map(|x| MatchedPeakIndex(x.1.unwrap(), x.0))
+    .collect();
+
+
+    let mut unique_matches: HashSet<_> = query_matches.union(&reference_matches).cloned().collect();
+
+    unique_matches.clone().into_iter().for_each(|matched_peak| {
+        unique_matches.clone().into_iter().for_each(|other_matched_peak| {
+            if matched_peak.0 == other_matched_peak.0 && matched_peak.1 == other_matched_peak.1 {
+                return;
+            }
+
+            if matched_peak.0 == other_matched_peak.0 || matched_peak.1 == other_matched_peak.1 {
+                let intensity_sum_matched = query_intensities[matched_peak.0] + reference_intensities[matched_peak.1];
+                let intensity_sum_other_matched = query_intensities[other_matched_peak.0] + reference_intensities[other_matched_peak.1];
+                
+                if intensity_sum_matched > intensity_sum_other_matched {
+                    unique_matches.remove(&other_matched_peak);
+                } else {
+                    unique_matches.remove(&matched_peak);
+                }
+            }
+        });
+    });
+
+    unique_matches.into_iter().collect()
 }
 
 #[wasm_bindgen(start)]

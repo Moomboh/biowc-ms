@@ -1,8 +1,8 @@
-import { LitElement, svg } from 'lit';
+import { LitElement, PropertyValueMap, svg } from 'lit';
 import { customElement, property, query, queryAll } from 'lit/decorators.js';
 import styles from './styles/biowc-spectrum-peaks.css.js';
 import range from './utils/range.js';
-import { IndexedMatchedPeaks, PEAK_COLOR_MAP } from './peaks.js';
+import { IndexedMatchedIons, PEAK_COLOR_MAP } from './peaks.js';
 
 @customElement('biowc-spectrum-peaks')
 export class BiowcSpectrumPeaks extends LitElement {
@@ -18,7 +18,10 @@ export class BiowcSpectrumPeaks extends LitElement {
   intensities: number[] = [];
 
   @property({ type: Object, attribute: 'matched-peaks' })
-  indexedMatchedPeaks: IndexedMatchedPeaks = {};
+  indexedMatchedIons: IndexedMatchedIons = {};
+
+  @property({ type: Array, attribute: 'hide-peak-indices' })
+  hidePeakIndices: number[] = [];
 
   @property({ type: Number, attribute: 'min-mz' })
   minMz: number | null = null;
@@ -289,6 +292,13 @@ export class BiowcSpectrumPeaks extends LitElement {
     `;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected updated(
+    _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>,
+  ): void {
+    this._updateZoomAndScroll();
+  }
+
   updateZoomScroll(
     xZoom: number,
     xScroll: number,
@@ -371,7 +381,6 @@ export class BiowcSpectrumPeaks extends LitElement {
 
   private _renderXtick(axesFrac: number) {
     const x = this._mzToX(this._minMz + axesFrac * this._mzRange);
-    const label = this._xTickFractionToMzLabel(axesFrac);
 
     const lineY1 = this._axesYStart;
     const lineY2 = this.mirror
@@ -397,9 +406,7 @@ export class BiowcSpectrumPeaks extends LitElement {
         text-anchor="middle"
         class="x-tick-label"
         data-fraction="${axesFrac}"
-      >
-        ${label}
-      </text>
+      ></text>
     `;
   }
 
@@ -407,7 +414,6 @@ export class BiowcSpectrumPeaks extends LitElement {
     const y = this._intensityToY(
       this._intensityRange - axesFrac * this._intensityRange,
     );
-    const label = this._yTickFractionToIntensityLabel(axesFrac);
 
     return svg`
       <line
@@ -425,9 +431,7 @@ export class BiowcSpectrumPeaks extends LitElement {
         text-anchor="end"
         class="y-tick-label"
         data-fraction="${axesFrac}"
-      >
-        ${label}
-      </text>
+      ></text>
     `;
   }
 
@@ -465,11 +469,15 @@ export class BiowcSpectrumPeaks extends LitElement {
   }
 
   private _renderPeak(mz: number, intensity: number, i: number) {
+    if (this.hidePeakIndices.includes(i)) {
+      return svg``;
+    }
+
     let stroke = 'grey';
     let annotationSvg = svg``;
 
-    if (this.indexedMatchedPeaks[i]) {
-      const matchedPeak = this.indexedMatchedPeaks[i];
+    if (this.indexedMatchedIons[i]) {
+      const matchedPeak = this.indexedMatchedIons[i];
       const ionType = matchedPeak.ion_type;
       const aaPosition = matchedPeak.aa_position;
       const { charge } = matchedPeak;
@@ -541,6 +549,7 @@ export class BiowcSpectrumPeaks extends LitElement {
 
     this._yTickLabels?.forEach(tickLabel => {
       const fraction = parseFloat(tickLabel.dataset.fraction || '0');
+
       // eslint-disable-next-line no-param-reassign
       tickLabel.textContent = this._yTickFractionToIntensityLabel(fraction);
     });

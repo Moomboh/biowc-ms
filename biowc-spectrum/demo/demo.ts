@@ -1,11 +1,14 @@
 import { html, render } from 'lit';
-import init, { annotateSpectrum } from 'biowc-ms-lib';
+import init, { annotateSpectrum, matchPeaks } from 'biowc-ms-lib';
 import {
   fetchSpectrumFromSource,
   Spectrum,
   SpectrumSource,
 } from '../src/spectrum.js';
+// eslint-disable-next-line import/no-duplicates
 import '../src/BiowcSpectrum.js';
+// eslint-disable-next-line import/no-duplicates
+import { BiowcSpectrum } from '../src/BiowcSpectrum.js';
 
 init();
 
@@ -75,6 +78,18 @@ function transformKoinaSpectrum(spectrum: KoinaSpectrum): Spectrum {
   };
 }
 
+function toggleUnmatchedPeaks() {
+  const spectrumEl = document.querySelector('#spectrum')! as BiowcSpectrum;
+  spectrumEl.hideUnmatchedPeaks = !spectrumEl.hideUnmatchedPeaks;
+
+  const toggleButton = document.querySelector(
+    '#toggle-hide-peaks',
+  )! as HTMLButtonElement;
+  toggleButton.textContent = spectrumEl.hideUnmatchedPeaks
+    ? 'Show unmatched Peaks'
+    : 'Hide unmatched Peaks';
+}
+
 export async function mount(el: HTMLElement) {
   const pepSeq = 'VLHPLEGAVVIIFK';
   const charge = 2;
@@ -99,15 +114,23 @@ export async function mount(el: HTMLElement) {
   } else {
     const spectrum = spectrumResponse.val[0];
 
-    const matchedPeaks = annotateSpectrum(
+    const matchedFragments = annotateSpectrum(
       pepSeq,
       new Float64Array(spectrum.mzs),
       new Float64Array(spectrum.intensities),
       1e-3,
     );
 
-    const mirrorMatchedPeaks = annotateSpectrum(
+    const mirrorMatchedFragments = annotateSpectrum(
       pepSeq,
+      new Float64Array(mirrorSpectrum.mzs),
+      new Float64Array(mirrorSpectrum.intensities),
+      1e-3,
+    );
+
+    const matchedPeaks = matchPeaks(
+      new Float64Array(spectrum.mzs),
+      new Float64Array(spectrum.intensities),
       new Float64Array(mirrorSpectrum.mzs),
       new Float64Array(mirrorSpectrum.intensities),
       1e-3,
@@ -116,14 +139,19 @@ export async function mount(el: HTMLElement) {
     render(
       html`
         <biowc-spectrum
+          id="spectrum"
           .spectrum=${spectrum}
-          .matchedPeaks=${matchedPeaks}
+          .matchedIons=${matchedFragments}
           .pepSeq=${pepSeq}
           .charge=${charge}
           .mirrorSpectrum=${mirrorSpectrum}
-          .mirrorMatchedPeaks=${mirrorMatchedPeaks}
+          .mirrorMatchedIons=${mirrorMatchedFragments}
           .normalizeIntensity=${true}
+          .matchedPeaks=${matchedPeaks}
         ></biowc-spectrum>
+        <button id="toggle-hide-peaks" @click=${toggleUnmatchedPeaks}>
+          Hide unmatched Peaks
+        </button>
       `,
       el,
     );
