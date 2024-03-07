@@ -21,6 +21,8 @@ npm i biowc-spectrum
 
 ## Backlog 
 
+### Bug Fixes
+
 ### Features
 - [ ] Match mirror peaks and highlight them on hover
 - [ ] Add spectral angle/pearson correlation/dot product score

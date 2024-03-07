@@ -292,8 +292,8 @@ export class BiowcSpectrumPeaks extends LitElement {
     `;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected updated(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>,
   ): void {
     this._updateZoomAndScroll();
@@ -577,7 +577,7 @@ export class BiowcSpectrumPeaks extends LitElement {
 
     if (e.ctrlKey) {
       this._handleXZoom(e.deltaX, e.offsetX - this._axesXStartPadded);
-      this._handleYZoom(e.deltaY, e.offsetY - this._axesYEnd);
+      this._handleYZoom(e.deltaY, this._axesYStart - e.offsetY);
     } else {
       if (this._xZoom > 1) {
         this._handleXScroll(e.deltaX);
