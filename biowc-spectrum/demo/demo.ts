@@ -10,8 +10,6 @@ import '../src/BiowcSpectrum.js';
 // eslint-disable-next-line import/no-duplicates
 import { BiowcSpectrum } from '../src/BiowcSpectrum.js';
 
-init();
-
 interface KoinaOutput {
   name: string;
   datatype: string;
@@ -30,6 +28,8 @@ interface KoinaSpectrum {
 }
 
 async function fetchKoinaSpectrum(pepSeq: string): Promise<KoinaSpectrum> {
+  await init();
+
   const response = (
     await fetch(`/koina/v2/models/Prosit_2020_intensity_HCD/infer`, {
       method: 'POST',
