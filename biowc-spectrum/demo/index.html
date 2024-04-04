@@ -18,9 +18,10 @@
   <div id="demo"></div>
 
   <script type="module">
-    import { mount } from '../dist/demo/demo.js'
+    import { mountCached } from '../dist/demo/demo.js'
 
-    await mount(document.getElementById('demo'));
+    // await mount(document.getElementById('demo'));
+    await mountCached(document.getElementById('demo'));
   </script>
 </body>
 

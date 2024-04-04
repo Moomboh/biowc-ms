@@ -10,6 +10,9 @@ import '../src/BiowcSpectrum.js';
 // eslint-disable-next-line import/no-duplicates
 import { BiowcSpectrum } from '../src/BiowcSpectrum.js';
 
+import usiSpec from './usi-spec.js';
+import koinaSpec from './koina-spec.js';
+
 async function fetchKoinaProxiSpectrum(): Promise<Spectrum> {
   const params = new URLSearchParams({
     peptide_sequences: 'VLHPLEGAVVIIFK',
@@ -43,7 +46,7 @@ function toggleUnmatchedPeaks() {
 }
 
 export async function mount(el: HTMLElement) {
-  init();
+  await init();
 
   const pepSeq = 'VLHPLEGAVVIIFK';
   const charge = 2;
@@ -108,4 +111,55 @@ export async function mount(el: HTMLElement) {
       el,
     );
   }
+}
+
+export async function mountCached(el: HTMLElement) {
+  await init();
+
+  const pepSeq = 'VLHPLEGAVVIIFK';
+  const charge = 2;
+  const spectrum = usiSpec;
+  const mirrorSpectrum = koinaSpec;
+
+  const matchedFragments = annotateSpectrum(
+    pepSeq,
+    new Float64Array(spectrum.mzs),
+    new Float64Array(spectrum.intensities),
+    1e-3,
+  );
+
+  const mirrorMatchedFragments = annotateSpectrum(
+    pepSeq,
+    new Float64Array(mirrorSpectrum.mzs),
+    new Float64Array(mirrorSpectrum.intensities),
+    1e-3,
+  );
+
+  const matchedPeaks = matchPeaks(
+    new Float64Array(spectrum.mzs),
+    new Float64Array(spectrum.intensities),
+    new Float64Array(mirrorSpectrum.mzs),
+    new Float64Array(mirrorSpectrum.intensities),
+    1e-3,
+  );
+
+  render(
+    html`
+      <biowc-spectrum
+        id="spectrum"
+        .spectrum=${spectrum}
+        .matchedIons=${matchedFragments}
+        .pepSeq=${pepSeq}
+        .charge=${charge}
+        .mirrorSpectrum=${mirrorSpectrum}
+        .mirrorMatchedIons=${mirrorMatchedFragments}
+        .normalizeIntensity=${true}
+        .matchedPeaks=${matchedPeaks}
+      ></biowc-spectrum>
+      <button id="toggle-hide-peaks" @click=${toggleUnmatchedPeaks}>
+        Hide unmatched Peaks
+      </button>
+    `,
+    el,
+  );
 }
