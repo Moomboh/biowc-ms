@@ -17,6 +17,13 @@ export class BiowcSpectrumPeaks extends LitElement {
   @property({ type: Array, attribute: 'intensities' })
   intensities: number[] = [];
 
+  // TODO: this is currently only required for its length
+  //       to correctly number the ions.
+  //       Maybe this can be removed in the future by adding the
+  //       correct numbering to the matched peaks.
+  @property({ type: String, attribute: 'pep-seq' })
+  pepSeq = '';
+
   @property({ type: Object, attribute: 'matched-peaks' })
   indexedMatchedIons: IndexedMatchedIons = {};
 
@@ -479,7 +486,12 @@ export class BiowcSpectrumPeaks extends LitElement {
     if (this.indexedMatchedIons[i]) {
       const matchedPeak = this.indexedMatchedIons[i];
       const ionType = matchedPeak.ion_type;
-      const aaPosition = matchedPeak.aa_position;
+      let aaPosition = matchedPeak.aa_position;
+
+      if (ionType === 'y') {
+        aaPosition = this.pepSeq.length - aaPosition + 1;
+      }
+
       const { charge } = matchedPeak;
 
       stroke = PEAK_COLOR_MAP.get(ionType) || 'grey';

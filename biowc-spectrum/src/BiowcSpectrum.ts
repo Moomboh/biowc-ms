@@ -136,6 +136,7 @@ export class BiowcSpectrum extends LitElement {
         id="peaks"
         .mzs=${this.spectrum.mzs}
         .intensities=${this._intensities}
+        .pepSeq=${this.pepSeq}
         .indexedMatchedIons=${indexMatchedIons(this.matchedIons)}
         .minMz=${this._minMz}
         .maxMz=${this._maxMz}
@@ -149,6 +150,7 @@ export class BiowcSpectrum extends LitElement {
             <biowc-spectrum-peaks
               id="mirror-peaks"
               .mzs=${this.mirrorSpectrum.mzs}
+              .pepSeq=${this.pepSeq}
               .intensities=${this._mirrorIntensities}
               .indexedMatchedIons=${indexMatchedIons(this.mirrorMatchedIons)}
               .mirror=${true}
