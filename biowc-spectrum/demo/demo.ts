@@ -10,72 +10,24 @@ import '../src/BiowcSpectrum.js';
 // eslint-disable-next-line import/no-duplicates
 import { BiowcSpectrum } from '../src/BiowcSpectrum.js';
 
-interface KoinaOutput {
-  name: string;
-  datatype: string;
-  shape: number[];
-  data: any[];
-}
+async function fetchKoinaProxiSpectrum(): Promise<Spectrum> {
+  const params = new URLSearchParams({
+    peptide_sequences: 'VLHPLEGAVVIIFK',
+    collision_energies: '30',
+    precursor_charges: '2',
+    instrument_types: 'LUMOS',
+  });
 
-interface KoinaSpectrum {
-  id: string;
-  model_name: string;
-  model_version: string;
-  outputs: KoinaOutput[];
-  parameters: {
-    [key: string]: any;
-  };
-}
-
-async function fetchKoinaSpectrum(pepSeq: string): Promise<KoinaSpectrum> {
-  await init();
-
-  const response = (
-    await fetch(`/koina/v2/models/Prosit_2020_intensity_HCD/infer`, {
-      method: 'POST',
+  const response = await fetch(
+    `https://koina.wilhelmlab.org/v2/models/Prosit_2019_intensity/usi?${params.toString()}`,
+    {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        id: '0',
-        inputs: [
-          {
-            name: 'peptide_sequences',
-            shape: [1, 1],
-            datatype: 'BYTES',
-            data: [pepSeq],
-          },
-          {
-            name: 'precursor_charges',
-            shape: [1, 1],
-            datatype: 'INT32',
-            data: [2],
-          },
-          {
-            name: 'collision_energies',
-            shape: [1, 1],
-            datatype: 'FP32',
-            data: [25],
-          },
-        ],
-      }),
-    })
-  ).json();
-
-  return response;
-}
-
-function transformKoinaSpectrum(spectrum: KoinaSpectrum): Spectrum {
-  const mzs = spectrum.outputs.find(output => output.name === 'mz')?.data || [];
-  const intensities =
-    spectrum.outputs.find(output => output.name === 'intensities')?.data || [];
-
-  return {
-    attributes: [],
-    // Koina returns -1 not null values for missing values, so we filter them out
-    mzs: mzs.filter(mz => mz > 0),
-    intensities: intensities.filter(intensity => intensity > 0),
-  };
+    },
+  );
+  return response.json();
 }
 
 function toggleUnmatchedPeaks() {
@@ -91,6 +43,8 @@ function toggleUnmatchedPeaks() {
 }
 
 export async function mount(el: HTMLElement) {
+  init();
+
   const pepSeq = 'VLHPLEGAVVIIFK';
   const charge = 2;
 
@@ -99,9 +53,7 @@ export async function mount(el: HTMLElement) {
     SpectrumSource.ProteomeCentral,
   );
 
-  const mirrorSpectrum = transformKoinaSpectrum(
-    await fetchKoinaSpectrum(pepSeq),
-  );
+  const mirrorSpectrum = await fetchKoinaProxiSpectrum();
 
   if (spectrumResponse.err) {
     render(
