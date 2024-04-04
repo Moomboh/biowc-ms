@@ -95,6 +95,10 @@ export class BiowcSpectrum extends LitElement {
     );
   }
 
+  private get _hasMatchedIons() {
+    return this.matchedIons.length > 0;
+  }
+
   private get _hidePeakIndices() {
     if (!this.hideUnmatchedPeaks) return [];
 
@@ -157,15 +161,18 @@ export class BiowcSpectrum extends LitElement {
         style="width: 100%; height: 40vh;"
       ></biowc-spectrum-peaks>
 
-      <biowc-spectrum-error
-        id="error"
-        .matchedIons=${this.matchedIons}
-        .minMz=${this._minMz}
-        .maxMz=${this._maxMz}
-        @zoom-scroll=${this._handleErrorZoomScroll}
-        style="width: 100%; height: 200px;"
-      ></biowc-spectrum-error>
-
+      ${this._hasMatchedIons
+        ? html`
+            <biowc-spectrum-error
+              id="error"
+              .matchedIons=${this.matchedIons}
+              .minMz=${this._minMz}
+              .maxMz=${this._maxMz}
+              @zoom-scroll=${this._handleErrorZoomScroll}
+              style="width: 100%; height: 200px;"
+            ></biowc-spectrum-error>
+          `
+        : ''}
       ${this._hasMirrorSpectrum
         ? html`
             <biowc-spectrum-peaks
