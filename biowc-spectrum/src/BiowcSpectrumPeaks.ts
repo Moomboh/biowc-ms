@@ -183,17 +183,65 @@ export class BiowcSpectrumPeaks extends LitElement {
     return this._maxIntensity;
   }
 
-  private get _axesXStart() {
-    const yTickWidth =
-      this._maxIntensity.toPrecision(this.yTicksPrecision).length *
-      this.tickLetterWidthRatio *
-      this.tickFontSize;
+  private _xTickWidth = 0;
 
+  private _yTickWidth = 0;
+
+  @property()
+  set xTickWidth(width: number) {
+    this._xTickWidth = width;
+  }
+
+  get xTickWidth() {
+    if (this._xTickWidth === 0) {
+      const xTickLabelLenghts = range(0, this.nXTicks - 1).map(
+        (i: number) =>
+          (this._minMz + (i / (this.nXTicks - 1)) * this._mzRange).toPrecision(
+            this.xTicksPrecision,
+          ).length,
+      );
+
+      return (
+        Math.max(...xTickLabelLenghts) *
+        this.tickLetterWidthRatio *
+        this.tickFontSize
+      );
+    }
+
+    return this._xTickWidth;
+  }
+
+  @property()
+  set yTickWidth(width: number) {
+    this._yTickWidth = width;
+  }
+
+  get yTickWidth() {
+    if (this._yTickWidth === 0) {
+      const yTickLabelLengths = range(0, this.nYTicks - 1).map(
+        (i: number) =>
+          (
+            this._maxIntensity -
+            (i / (this.nYTicks - 1)) * this._intensityRange
+          ).toPrecision(this.yTicksPrecision).length,
+      );
+
+      return (
+        Math.max(...yTickLabelLengths) *
+        this.tickLetterWidthRatio *
+        this.tickFontSize
+      );
+    }
+
+    return this._yTickWidth;
+  }
+
+  private get _axesXStart() {
     return (
       this.axesLabelFontSize +
       3 + // TODO: check why SVG-Text elements are 3px larger than their font-size
       this.axesLabelMargin +
-      yTickWidth +
+      this.yTickWidth +
       this.tickMargin
     );
   }
@@ -203,12 +251,7 @@ export class BiowcSpectrumPeaks extends LitElement {
   }
 
   private get _axesXEnd() {
-    const xTickWidth =
-      this._maxMz.toPrecision(this.xTicksPrecision).length *
-      this.tickLetterWidthRatio *
-      this.tickFontSize;
-
-    return this.offsetWidth - xTickWidth / 2;
+    return this.offsetWidth - this.xTickWidth / 2;
   }
 
   private get _axesXEndPadded() {
@@ -309,11 +352,17 @@ export class BiowcSpectrumPeaks extends LitElement {
   updateZoomScroll(
     xZoom: number,
     xScroll: number,
-    yZoom: number,
-    yScroll: number,
+    yZoom?: number,
+    yScroll?: number,
   ) {
     this._xZoom = xZoom;
     this._xScroll = xScroll;
+
+    if (yZoom === undefined || yScroll === undefined) {
+      this._updateZoomAndScroll(true);
+      return;
+    }
+
     this._yZoom = yZoom;
     this._yScroll = yScroll;
 

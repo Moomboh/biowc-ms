@@ -1,13 +1,14 @@
+/* eslint-disable import/no-duplicates */
 import { LitElement, html } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import { MatchedFragmentPeak, MatchedPeakIndex } from 'biowc-ms-lib';
-// eslint-disable-next-line import/no-duplicates
 import './BiowcSpectrumPeaks.js';
-// eslint-disable-next-line import/no-duplicates
 import { BiowcSpectrumPeaks } from './BiowcSpectrumPeaks.js';
 import './BiowcPepSeq.js';
+import './BiowcSpectrumError.js';
 import { Spectrum } from './spectrum.js';
 import { indexMatchedIons } from './peaks.js';
+import { BiowcSpectrumError } from './BiowcSpectrumError.js';
 
 @customElement('biowc-spectrum')
 export class BiowcSpectrum extends LitElement {
@@ -51,6 +52,9 @@ export class BiowcSpectrum extends LitElement {
 
   @query('#mirror-peaks')
   mirrorPeaks: BiowcSpectrumPeaks | undefined;
+
+  @query('#error')
+  error: BiowcSpectrumError | undefined;
 
   private get _minMz() {
     return Math.min(
@@ -118,11 +122,19 @@ export class BiowcSpectrum extends LitElement {
   private _handleZoomScroll(e: CustomEvent) {
     const { xZoom, xScroll, yZoom, yScroll } = e.detail;
     this.mirrorPeaks?.updateZoomScroll(xZoom, xScroll, yZoom, -yScroll);
+    this.error?.updateZoomScroll(xZoom, xScroll);
   }
 
   private _handleMirrorZoomScroll(e: CustomEvent) {
     const { xZoom, xScroll, yZoom, yScroll } = e.detail;
     this.peaks?.updateZoomScroll(xZoom, xScroll, yZoom, -yScroll);
+    this.error?.updateZoomScroll(xZoom, xScroll);
+  }
+
+  private _handleErrorZoomScroll(e: CustomEvent) {
+    const { xZoom, xScroll } = e.detail;
+    this.peaks?.updateZoomScroll(xZoom, xScroll);
+    this.mirrorPeaks?.updateZoomScroll(xZoom, xScroll);
   }
 
   render() {
@@ -144,6 +156,15 @@ export class BiowcSpectrum extends LitElement {
         @zoom-scroll=${this._handleZoomScroll}
         style="width: 100%; height: 40vh;"
       ></biowc-spectrum-peaks>
+
+      <biowc-spectrum-error
+        id="error"
+        .matchedIons=${this.matchedIons}
+        .minMz=${this._minMz}
+        .maxMz=${this._maxMz}
+        @zoom-scroll=${this._handleErrorZoomScroll}
+        style="width: 100%; height: 200px;"
+      ></biowc-spectrum-error>
 
       ${this._hasMirrorSpectrum
         ? html`
@@ -169,5 +190,25 @@ export class BiowcSpectrum extends LitElement {
           `
         : ''}
     `;
+  }
+
+  protected firstUpdated(): void {
+    const maxYTickWidth = Math.max(
+      this.peaks?.yTickWidth || 0,
+      this.mirrorPeaks?.yTickWidth || 0,
+      this.error?.yTickWidth || 0,
+    );
+
+    if (this.peaks) {
+      this.peaks.yTickWidth = maxYTickWidth;
+    }
+
+    if (this.mirrorPeaks) {
+      this.mirrorPeaks.yTickWidth = maxYTickWidth;
+    }
+
+    if (this.error) {
+      this.error.yTickWidth = maxYTickWidth;
+    }
   }
 }
