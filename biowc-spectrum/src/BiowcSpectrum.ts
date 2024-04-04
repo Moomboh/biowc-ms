@@ -159,6 +159,11 @@ export class BiowcSpectrum extends LitElement {
               @zoom-scroll=${this._handleMirrorZoomScroll}
               style="width: 100%; height: 40vh;"
             ></biowc-spectrum-peaks>
+
+            <biowc-pep-seq
+              .pepSeq=${this.pepSeq}
+              .matchedIons=${this.mirrorMatchedIons}
+            ></biowc-pep-seq>
           `
         : ''}
     `;
