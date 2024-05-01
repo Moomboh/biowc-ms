@@ -47,6 +47,9 @@ export class BiowcSpectrum extends LitElement {
   @property({ type: Boolean })
   hideUnmatchedPeaks: boolean = false;
 
+  @property({ type: Boolean })
+  hideErrorPlot: boolean = false;
+
   @query('#peaks')
   peaks: BiowcSpectrumPeaks | undefined;
 
@@ -161,7 +164,7 @@ export class BiowcSpectrum extends LitElement {
         style="width: 100%; height: 40vh;"
       ></biowc-spectrum-peaks>
 
-      ${this._hasMatchedIons
+      ${this._hasMatchedIons && !this.hideErrorPlot
         ? html`
             <biowc-spectrum-error
               id="error"
