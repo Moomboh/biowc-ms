@@ -1,6 +1,6 @@
 [package]
 name = "biowclib-mz"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Elias Kahl <contact@elias.works>"]
 edition = "2018"
 
