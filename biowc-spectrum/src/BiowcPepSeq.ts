@@ -1,4 +1,4 @@
-import { MatchedFragmentPeak } from 'biowclib-ms';
+import { MatchedFragmentPeak } from 'biowclib-mz';
 import { LitElement, svg } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import styles from './styles/biowc-pep-seq.css.js';

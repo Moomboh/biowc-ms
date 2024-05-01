@@ -5,11 +5,11 @@
     "npm-run-all": "^4.1.5"
   },
   "scripts": {
-    "prepare": "husky && npm run prepare:biowclib-ms",
-    "prepare:biowclib-ms": "cd biowclib-ms && wasm-pack build --target web && cd ../biowc-spectrum && npm i -S ../biowclib-ms/pkg --force",
+    "prepare": "husky && npm run prepare:biowclib-mz",
+    "prepare:biowclib-mz": "cd biowclib-mz && wasm-pack build --target web && cd ../biowc-spectrum && npm i -S ../biowclib-mz/pkg --force",
     "pre-commit": "cd biowc-spectrum && npm run pre-commit",
     "commit-msg": "cd biowc-spectrum && npm run commit-msg",
-    "dev:biowclib-ms": "cd biowclib-ms && cargo watch -s 'wasm-pack build --target web && cd ../biowc-spectrum && npm i -S ../biowclib-ms/pkg --force && cd -'",
+    "dev:biowclib-mz": "cd biowclib-mz && cargo watch -s 'wasm-pack build --target web && cd ../biowc-spectrum && npm i -S ../biowclib-mz/pkg --force && cd -'",
     "dev:biowc-spectrum": "cd biowc-spectrum && npm start",
     "dev": "npm run prepare && npm-run-all --parallel dev:*"
   },

@@ -1,4 +1,4 @@
-import { MatchedFragmentPeak } from 'biowclib-ms';
+import { MatchedFragmentPeak } from 'biowclib-mz';
 
 export interface IndexedMatchedIons {
   [index: number]: MatchedFragmentPeak;

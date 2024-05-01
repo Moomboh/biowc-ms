@@ -10,7 +10,7 @@ Tools for efficient visulization and analysis of mass spectrometry data in the b
 
 A web component for visualizing mass spectra.
 
-## [biowclib-ms](./biowclib-ms/)
+## [biowclib-mz](./biowclib-mz/)
 
 A JavaScript library for annotating and matching mass spectra based on the
 [rusteomics/mzcore](https://github.com/rusteomics/mzcore/) Rust library.
