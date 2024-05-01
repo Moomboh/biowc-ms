@@ -1,7 +1,7 @@
 /* eslint-disable import/no-duplicates */
 import { LitElement, html } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
-import { MatchedFragmentPeak, MatchedPeakIndex } from 'biowc-ms-lib';
+import { MatchedFragmentPeak, MatchedPeakIndex } from 'biowclib-ms';
 import './BiowcSpectrumPeaks.js';
 import { BiowcSpectrumPeaks } from './BiowcSpectrumPeaks.js';
 import './BiowcPepSeq.js';

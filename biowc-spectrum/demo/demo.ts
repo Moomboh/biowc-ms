@@ -1,5 +1,5 @@
 import { html, render } from 'lit';
-import init, { annotateSpectrum, matchPeaks } from 'biowc-ms-lib';
+import init, { annotateSpectrum, matchPeaks } from 'biowclib-ms';
 import {
   fetchSpectrumFromSource,
   Spectrum,

@@ -1,6 +1,6 @@
 import { LitElement, PropertyValueMap, svg } from 'lit';
 import { customElement, property, query, queryAll } from 'lit/decorators.js';
-import { MatchedFragmentPeak } from 'biowc-ms-lib';
+import { MatchedFragmentPeak } from 'biowclib-ms';
 import range from './utils/range.js';
 import styles from './styles/biowc-spectrum-error.css.js';
 
