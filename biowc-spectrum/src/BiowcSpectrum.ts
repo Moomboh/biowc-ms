@@ -59,6 +59,10 @@ export class BiowcSpectrum extends LitElement {
   @query('#error')
   error: BiowcSpectrumError | undefined;
 
+  private get _strippedPepSeq() {
+    return this.pepSeq.replace(/\[.+?\]/g, '');
+  }
+
   private get _minMz() {
     return Math.min(
       Math.min(...this.spectrum.mzs),
@@ -147,7 +151,7 @@ export class BiowcSpectrum extends LitElement {
   render() {
     return html`
       <biowc-pep-seq
-        .pepSeq=${this.pepSeq}
+        .pepSeq=${this._strippedPepSeq}
         .matchedIons=${this.matchedIons}
       ></biowc-pep-seq>
 
@@ -155,7 +159,7 @@ export class BiowcSpectrum extends LitElement {
         id="peaks"
         .mzs=${this.spectrum.mzs}
         .intensities=${this._intensities}
-        .pepSeq=${this.pepSeq}
+        .pepSeq=${this._strippedPepSeq}
         .indexedMatchedIons=${indexMatchedIons(this.matchedIons)}
         .minMz=${this._minMz}
         .maxMz=${this._maxMz}
@@ -181,7 +185,7 @@ export class BiowcSpectrum extends LitElement {
             <biowc-spectrum-peaks
               id="mirror-peaks"
               .mzs=${this.mirrorSpectrum.mzs}
-              .pepSeq=${this.pepSeq}
+              .pepSeq=${this._strippedPepSeq}
               .intensities=${this._mirrorIntensities}
               .indexedMatchedIons=${indexMatchedIons(this.mirrorMatchedIons)}
               .mirror=${true}
@@ -194,7 +198,7 @@ export class BiowcSpectrum extends LitElement {
             ></biowc-spectrum-peaks>
 
             <biowc-pep-seq
-              .pepSeq=${this.pepSeq}
+              .pepSeq=${this._strippedPepSeq}
               .matchedIons=${this.mirrorMatchedIons}
             ></biowc-pep-seq>
           `
