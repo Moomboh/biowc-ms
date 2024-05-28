@@ -208,6 +208,7 @@ export class BiowcSpectrumError extends LitElement {
 
   private get _axesXStart() {
     return (
+      3 +
       this.axesLabelFontSize +
       3 + // TODO: check why SVG-Text elements are 3px larger than their font-size
       this.axesLabelMargin +
@@ -351,7 +352,7 @@ export class BiowcSpectrumError extends LitElement {
   private _renderAxes() {
     const xAxesLabelX = this._axesXCenter;
     const xAxesLabelY = this.offsetHeight - this.axesLabelMargin;
-    const yAxesLabelX = this.axesLabelMargin + 3; // TODO: check why svg text elements are 3px larger than font-size
+    const yAxesLabelX = this.axesLabelMargin + 6; // TODO: check why svg text elements are 3px larger than font-size
     const yAxesLabelY = this._axesYCenter;
 
     return svg`

@@ -374,7 +374,7 @@ export class BiowcSpectrumPeaks extends LitElement {
     const xAxesLabelY = this.mirror
       ? this.axesLabelFontSize + 3 // TODO: check why svg text elements are 3px larger than font-size
       : this.offsetHeight - this.axesLabelMargin;
-    const yAxesLabelX = this.axesLabelMargin + 3; // TODO: check why svg text elements are 3px larger than font-size
+    const yAxesLabelX = this.axesLabelMargin + 6; // TODO: check why svg text elements are 3px larger than font-size
     const yAxesLabelY = this._axesYCenter;
 
     return svg`
