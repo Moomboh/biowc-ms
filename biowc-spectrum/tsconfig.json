@@ -17,6 +17,6 @@
     "declaration": true,
     "incremental": true
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "../biowclib-mz/pkg"],
   "exclude": ["dist"]
 }
