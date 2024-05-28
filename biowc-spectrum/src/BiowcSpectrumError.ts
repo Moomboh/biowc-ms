@@ -4,6 +4,43 @@ import { MatchedFragmentPeak } from 'biowclib-mz';
 import range from './utils/range.js';
 import styles from './styles/biowc-spectrum-error.css.js';
 
+// eslint-disable-next-line no-shadow
+export enum MzErrorType {
+  ppm = 'ppm',
+  da = 'da',
+  mmu = 'mmu',
+}
+
+function getMzErrorTypeLabel(mzErrorType: MzErrorType): string {
+  switch (mzErrorType) {
+    case MzErrorType.ppm:
+      return 'Error (ppm)';
+    case MzErrorType.da:
+      return 'Error (Da)';
+    case MzErrorType.mmu:
+      return 'Error (mmu)';
+    default:
+      return 'Error';
+  }
+}
+
+function transformMzError(
+  referenceMz: number,
+  mzError: number,
+  mzErrorType: MzErrorType,
+): number {
+  switch (mzErrorType) {
+    case MzErrorType.ppm:
+      return (mzError / referenceMz) * 1e6;
+    case MzErrorType.da:
+      return mzError;
+    case MzErrorType.mmu:
+      return (mzError / referenceMz) * 1e3;
+    default:
+      return mzError;
+  }
+}
+
 // TODO: deduplicate axes/zoom/scroll with BiowcSpectrumPeaks
 @customElement('biowc-spectrum-error')
 export class BiowcSpectrumError extends LitElement {
@@ -21,8 +58,11 @@ export class BiowcSpectrumError extends LitElement {
   @property({ type: Number, attribute: 'max-mz' })
   maxMz: number = 0;
 
+  @property({ type: String, attribute: 'mz-error-type' })
+  mzErrorType: MzErrorType = MzErrorType.da;
+
   @property({ type: String, attribute: 'error-label' })
-  errorLabel = 'Error (Da)';
+  errorLabel = '';
 
   @property({ type: String, attribute: 'mz-label' })
   mzLabel = 'm/z';
@@ -87,6 +127,10 @@ export class BiowcSpectrumError extends LitElement {
   @queryAll('.error-dot')
   private _errorDots: SVGCircleElement[] | undefined;
 
+  private get _errorLabel() {
+    return this.errorLabel || getMzErrorTypeLabel(this.mzErrorType);
+  }
+
   get xTickWidth() {
     if (this._xTickWidth === 0) {
       const xTickLabelLenghts = range(0, this.nXTicks - 1).map(
@@ -139,11 +183,19 @@ export class BiowcSpectrumError extends LitElement {
   private _yTickWidth = 0;
 
   private get _minError() {
-    return Math.min(...this.matchedIons.map(ion => ion.mz_error));
+    return Math.min(
+      ...this.matchedIons.map(ion =>
+        transformMzError(ion.peak_mz, ion.mz_error, this.mzErrorType),
+      ),
+    );
   }
 
   private get _maxError() {
-    return Math.max(...this.matchedIons.map(ion => ion.mz_error));
+    return Math.max(
+      ...this.matchedIons.map(ion =>
+        transformMzError(ion.peak_mz, ion.mz_error, this.mzErrorType),
+      ),
+    );
   }
 
   private get _mzRange() {
@@ -359,7 +411,7 @@ export class BiowcSpectrumError extends LitElement {
           text-anchor="middle"
           transform="rotate(-90, ${yAxesLabelX}, ${yAxesLabelY})"
         >
-          ${this.errorLabel}
+          ${this._errorLabel}
         </text>
 
         ${range(0, this.nYTicks - 1).map((i: number) =>
@@ -467,7 +519,7 @@ export class BiowcSpectrumError extends LitElement {
 
   private _renderError(error: number, mz: number) {
     const x = this._mzToX(mz);
-    const y = this._errorToY(error);
+    const y = this._errorToY(transformMzError(mz, error, this.mzErrorType));
 
     return svg`
       <circle

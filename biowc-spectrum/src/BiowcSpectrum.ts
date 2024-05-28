@@ -8,7 +8,7 @@ import './BiowcPepSeq.js';
 import './BiowcSpectrumError.js';
 import { Spectrum } from './spectrum.js';
 import { indexMatchedIons } from './peaks.js';
-import { BiowcSpectrumError } from './BiowcSpectrumError.js';
+import { BiowcSpectrumError, MzErrorType } from './BiowcSpectrumError.js';
 
 @customElement('biowc-spectrum')
 export class BiowcSpectrum extends LitElement {
@@ -49,6 +49,9 @@ export class BiowcSpectrum extends LitElement {
 
   @property({ type: Boolean })
   hideErrorPlot: boolean = false;
+
+  @property({ type: String, attribute: 'mz-error-type' })
+  errorType: MzErrorType = MzErrorType.ppm;
 
   @query('#peaks')
   peaks: BiowcSpectrumPeaks | undefined;
@@ -175,6 +178,7 @@ export class BiowcSpectrum extends LitElement {
               .matchedIons=${this.matchedIons}
               .minMz=${this._minMz}
               .maxMz=${this._maxMz}
+              .mzErrorType=${this.errorType}
               @zoom-scroll=${this._handleErrorZoomScroll}
               style="width: 100%; height: 200px;"
             ></biowc-spectrum-error>

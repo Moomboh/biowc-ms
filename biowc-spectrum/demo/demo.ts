@@ -1,5 +1,10 @@
 import { html, render } from 'lit';
-import init, { annotateSpectrum, matchPeaks } from 'biowclib-mz';
+import init, {
+  annotateSpectrum,
+  matchPeaks,
+  MzErrorTolType,
+} from 'biowclib-mz';
+
 import {
   fetchSpectrumFromSource,
   Spectrum,
@@ -12,6 +17,7 @@ import { BiowcSpectrum } from '../src/BiowcSpectrum.js';
 
 import usiSpec from './usi-spec.js';
 import koinaSpec from './koina-spec.js';
+import { MzErrorType } from '../src/BiowcSpectrumError.js';
 
 async function fetchKoinaProxiSpectrum(): Promise<Spectrum> {
   const params = new URLSearchParams({
@@ -73,14 +79,18 @@ export async function mount(el: HTMLElement) {
       pepSeq,
       new Float64Array(spectrum.mzs),
       new Float64Array(spectrum.intensities),
-      1e-3,
+      -20,
+      20,
+      MzErrorTolType.Ppm,
     );
 
     const mirrorMatchedFragments = annotateSpectrum(
       pepSeq,
       new Float64Array(mirrorSpectrum.mzs),
       new Float64Array(mirrorSpectrum.intensities),
-      1e-3,
+      -20,
+      20,
+      MzErrorTolType.Ppm,
     );
 
     const matchedPeaks = matchPeaks(
@@ -88,7 +98,9 @@ export async function mount(el: HTMLElement) {
       new Float64Array(spectrum.intensities),
       new Float64Array(mirrorSpectrum.mzs),
       new Float64Array(mirrorSpectrum.intensities),
-      1e-3,
+      -20,
+      20,
+      MzErrorTolType.Ppm,
     );
 
     render(
@@ -103,6 +115,7 @@ export async function mount(el: HTMLElement) {
           .mirrorMatchedIons=${mirrorMatchedFragments}
           .normalizeIntensity=${true}
           .matchedPeaks=${matchedPeaks}
+          .errorType=${MzErrorType.ppm}
         ></biowc-spectrum>
         <button id="toggle-hide-peaks" @click=${toggleUnmatchedPeaks}>
           Hide unmatched Peaks
@@ -125,14 +138,18 @@ export async function mountCached(el: HTMLElement) {
     pepSeq,
     new Float64Array(spectrum.mzs),
     new Float64Array(spectrum.intensities),
-    1e-3,
+    -20,
+    20,
+    MzErrorTolType.Ppm,
   );
 
   const mirrorMatchedFragments = annotateSpectrum(
     pepSeq,
     new Float64Array(mirrorSpectrum.mzs),
     new Float64Array(mirrorSpectrum.intensities),
-    1e-3,
+    -20,
+    20,
+    MzErrorTolType.Ppm,
   );
 
   const matchedPeaks = matchPeaks(
@@ -140,7 +157,9 @@ export async function mountCached(el: HTMLElement) {
     new Float64Array(spectrum.intensities),
     new Float64Array(mirrorSpectrum.mzs),
     new Float64Array(mirrorSpectrum.intensities),
-    1e-3,
+    -20,
+    20,
+    MzErrorTolType.Ppm,
   );
 
   render(
