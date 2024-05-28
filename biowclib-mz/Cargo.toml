@@ -12,7 +12,7 @@ default = ["console_error_panic_hook"]
 
 [dependencies]
 wasm-bindgen = "0.2.84"
-mzcore = { git = "https://github.com/rusteomics/mzcore" }
+mzcore = { git = "https://github.com/Moomboh/mzcore.git", rev = "0c01971" }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
