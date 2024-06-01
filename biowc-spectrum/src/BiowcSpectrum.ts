@@ -35,6 +35,12 @@ export class BiowcSpectrum extends LitElement {
     mzs: [],
   };
 
+  @property({ type: String })
+  mirrorPepSeq: string = '';
+
+  @property({ type: Number })
+  mirrorCharge: number = 0;
+
   @property({ type: Array })
   mirrorMatchedIons: MatchedFragmentPeak[] = [];
 
@@ -64,6 +70,10 @@ export class BiowcSpectrum extends LitElement {
 
   private get _strippedPepSeq() {
     return this.pepSeq.replace(/\[.+?\]/g, '');
+  }
+
+  private get _strippedMirrorPepSeq() {
+    return this.mirrorPepSeq.replace(/\[.+?\]/g, '');
   }
 
   private get _minMz() {
@@ -202,8 +212,8 @@ export class BiowcSpectrum extends LitElement {
             ></biowc-spectrum-peaks>
 
             <biowc-pep-seq
-              .pepSeq=${this._strippedPepSeq}
-              .matchedIons=${this.mirrorMatchedIons}
+              .pepSeq=${this._strippedMirrorPepSeq}
+              .mirrorMatchedIons=${this.mirrorMatchedIons}
             ></biowc-pep-seq>
           `
         : ''}
