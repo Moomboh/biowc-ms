@@ -111,6 +111,7 @@ export async function mount(el: HTMLElement) {
           .matchedIons=${matchedFragments}
           .pepSeq=${pepSeq}
           .charge=${charge}
+          .mirrorPepSeq=${pepSeq}
           .mirrorSpectrum=${mirrorSpectrum}
           .mirrorMatchedIons=${mirrorMatchedFragments}
           .normalizeIntensity=${true}
@@ -169,6 +170,7 @@ export async function mountCached(el: HTMLElement) {
         .spectrum=${spectrum}
         .matchedIons=${matchedFragments}
         .pepSeq=${pepSeq}
+        .mirrorPepSeq=${pepSeq}
         .charge=${charge}
         .mirrorSpectrum=${mirrorSpectrum}
         .mirrorMatchedIons=${mirrorMatchedFragments}

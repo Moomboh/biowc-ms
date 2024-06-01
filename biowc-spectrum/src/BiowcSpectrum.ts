@@ -213,7 +213,7 @@ export class BiowcSpectrum extends LitElement {
 
             <biowc-pep-seq
               .pepSeq=${this._strippedMirrorPepSeq}
-              .mirrorMatchedIons=${this.mirrorMatchedIons}
+              .matchedIons=${this.mirrorMatchedIons}
             ></biowc-pep-seq>
           `
         : ''}
