@@ -69,11 +69,11 @@ export class BiowcSpectrum extends LitElement {
   error: BiowcSpectrumError | undefined;
 
   private get _strippedPepSeq() {
-    return this.pepSeq.replace(/\[.+?\]/g, '');
+    return this.pepSeq.replace(/-?\[.+?\]-?/g, '');
   }
 
   private get _strippedMirrorPepSeq() {
-    return this.mirrorPepSeq.replace(/\[.+?\]/g, '');
+    return this.mirrorPepSeq.replace(/-?\[.+?\]-?/g, '');
   }
 
   private get _minMz() {
