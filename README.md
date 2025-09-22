@@ -1,6 +1,5 @@
 > [!CAUTION]  
-> This repository is under active development.
-> Breaking changes may occur and documentation may be incomplete.
+> This repository is currently not maintained.
 
 # biowc-ms
 
